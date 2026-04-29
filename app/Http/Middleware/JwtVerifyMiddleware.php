@@ -26,6 +26,14 @@ class JwtVerifyMiddleware
             $publicKey = config('jwt.public_key');
 
             if (empty($publicKey)) {
+                // Fallback for local multi-service dev: read key from sibling user-service.
+                $fallbackPath = base_path('../user-service/storage/keys/jwt_public.pem');
+                if (is_readable($fallbackPath)) {
+                    $publicKey = (string) file_get_contents($fallbackPath);
+                }
+            }
+
+            if (empty($publicKey)) {
                 throw new \RuntimeException('JWT public key not configured');
             }
 
