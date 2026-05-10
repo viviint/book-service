@@ -1,0 +1,48 @@
+services:
+  book-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: books_db
+      MYSQL_USER: rent
+      MYSQL_PASSWORD: rent_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - book-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-urent", "-prent_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  book-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_NAME: Book Service
+      APP_ENV: local
+      APP_KEY: base64:nYP5umwt/awJeDevSp4k3W4mL8m+/9Lv614dS4n+w5U=
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8002
+      APP_PORT: 8002
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: mysql
+      DB_HOST: book-db
+      DB_PORT: 3306
+      DB_DATABASE: books_db
+      DB_USERNAME: rent
+      DB_PASSWORD: rent_password
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      SERVICE_KEY: 2f3b9986e5cd631b726f80faa1ccbb8c8f404132a42fb41dc36ad9a45a1290a4
+      USER_SERVICE_PUBLIC_KEY: ""
+      L5_SWAGGER_CONST_HOST: http://localhost:8002
+    ports:
+      - "8002:8002"
+    depends_on:
+      book-db:
+        condition: service_healthy
+
+volumes:
+  book-db-data:
